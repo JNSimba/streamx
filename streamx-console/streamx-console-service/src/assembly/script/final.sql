@@ -93,7 +93,8 @@ CREATE TABLE `t_flink_app` (
 `OPTION_STATE` tinyint DEFAULT NULL,
 `TRACKING` tinyint DEFAULT NULL,
 `CREATE_TIME` datetime DEFAULT NULL,
-`DEPLOY` tinyint DEFAULT '0',
+`LAUNCH` tinyint DEFAULT '1',
+`BUILD` tinyint DEFAULT '1',
 `START_TIME` datetime DEFAULT NULL,
 `END_TIME` datetime DEFAULT NULL,
 `ALERT_EMAIL` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
@@ -112,7 +113,7 @@ KEY `INX_TRACK` (`TRACKING`) USING BTREE
 -- Records of t_flink_app
 -- ----------------------------
 BEGIN;
-INSERT INTO `t_flink_app` VALUES (100000, 2, 4, NULL, NULL, 'Flink SQL Demo', NULL, NULL, NULL, NULL, NULL, '{\"jobmanager.memory.process.size\":\"1024mb\",\"taskmanager.memory.process.size\":\"1024mb\",\"parallelism.default\":1,\"taskmanager.numberOfTaskSlots\":1}', NULL, 100000, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, '2', 0, NULL, NULL, NULL, NULL, NULL, NULL, 'Flink SQL Demo', 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NOW(), 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL);
+INSERT INTO `t_flink_app` VALUES (100000, 2, 4, NULL, NULL, 'Flink SQL Demo', NULL, NULL, NULL, NULL, NULL, NULL , NULL, 100000, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, '0', 0, NULL, NULL, NULL, NULL, NULL, NULL, 'Flink SQL Demo', 0, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NOW(), 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL);
 COMMIT;
 
 -- ----------------------------
@@ -210,15 +211,16 @@ CREATE TABLE `t_flink_project` (
 `NAME` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
 `URL` varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
 `BRANCHES` varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
-`USERNAME` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+`USER_NAME` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
 `PASSWORD` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
 `POM` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+`BUILD_ARGS` varchar(255) DEFAULT '-1',
 `TYPE` tinyint DEFAULT NULL,
 `REPOSITORY` tinyint DEFAULT NULL,
 `DATE` datetime DEFAULT NULL,
-`LASTBUILD` datetime DEFAULT NULL,
+`LAST_BUILD` datetime DEFAULT NULL,
 `DESCRIPTION` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-`BUILDSTATE` tinyint DEFAULT '-1',
+`BUILD_STATE` tinyint DEFAULT '-1',
 PRIMARY KEY (`ID`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=100000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -226,7 +228,7 @@ PRIMARY KEY (`ID`) USING BTREE
 -- Records of t_flink_project
 -- ----------------------------
 BEGIN;
-INSERT INTO `t_flink_project` VALUES (100000, 'streamx-quickstart', 'https://github.com/streamxhub/streamx-quickstart.git', 'main', NULL, NULL, NULL, 1, 1, NOW(), NULL, 'streamx-quickstart', 1);
+INSERT INTO `t_flink_project` VALUES (100000, 'streamx-quickstart', 'https://github.com/streamxhub/streamx-quickstart.git', 'main', NULL, NULL, NULL, NULL, 1, 1, NOW(), NULL, 'streamx-quickstart', 1);
 COMMIT;
 
 -- ----------------------------
@@ -260,7 +262,7 @@ CREATE TABLE `t_flink_sql` (
 `SQL` text COLLATE utf8mb4_general_ci,
 `DEPENDENCY` text COLLATE utf8mb4_general_ci,
 `VERSION` int DEFAULT NULL,
-`CANDIDATE` tinyint NOT NULL DEFAULT '0',
+`CANDIDATE` tinyint NOT NULL DEFAULT '1',
 `CREATE_TIME` datetime DEFAULT NULL,
 PRIMARY KEY (`ID`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=100000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -269,7 +271,7 @@ PRIMARY KEY (`ID`) USING BTREE
 -- Records of t_flink_sql
 -- ----------------------------
 BEGIN;
-INSERT INTO `t_flink_sql` VALUES (100000, 100000, 'eNqlUUtPhDAQvu+vmFs1AYIHT5s94AaVqGxSSPZIKgxrY2mxrdGfb4GS3c0+LnJo6Mz36syapkmZQpk8vKbQMMt2KOFmAe5rK4Nf3yhrhCwvA1/TTDaqO61UxmooSprlT1PDGkgKEKpmwvIOjWVdP3W2zpG+JfQFHjfU46xxrVvYZuWztye1khJrqzSBFRCfjUwSYQiqt1xJJvyPcbWJp9WPCXvUoUEn0ZAVufcs0nIUjYn2L4s++YiY75eBLr+2Dnl3GYKTWRyfQKYRRR2XZxXmNvu9yh9GHAmUO/sxyMRkGNly4c714RZ7zaWtLHsX+N9NjvVrWxm99jmyvEhpOUhujmIYFI5zkCOYzYIj11a7QH7Tyz+nE8bw', NULL, 1, 0, NOW());
+INSERT INTO `t_flink_sql` VALUES (100000, 100000, 'eNqlUUtPhDAQvu+vmFs1AYIHT5s94AaVqGxSSPZIKgxrY2mxrdGfb4GS3c0+LnJo6Mz36syapkmZQpk8vKbQMMt2KOFmAe5rK4Nf3yhrhCwvA1/TTDaqO61UxmooSprlT1PDGkgKEKpmwvIOjWVdP3W2zpG+JfQFHjfU46xxrVvYZuWztye1khJrqzSBFRCfjUwSYQiqt1xJJvyPcbWJp9WPCXvUoUEn0ZAVufcs0nIUjYn2L4s++YiY75eBLr+2Dnl3GYKTWRyfQKYRRR2XZxXmNvu9yh9GHAmUO/sxyMRkGNly4c714RZ7zaWtLHsX+N9NjvVrWxm99jmyvEhpOUhujmIYFI5zkCOYzYIj11a7QH7Tyz+nE8bw', NULL, 1, 1, NOW());
 COMMIT;
 
 -- ----------------------------
@@ -341,7 +343,7 @@ INSERT INTO `t_menu` VALUES (100021, 100013, 'Edit StreamX App', '/flink/app/edi
 INSERT INTO `t_menu` VALUES (100022, 100014, 'build', NULL, NULL, 'project:build', NULL, '1', '1', NULL, NOW(), NULL);
 INSERT INTO `t_menu` VALUES (100023, 100014, 'delete', NULL, NULL, 'project:delete', NULL, '1', '1', NULL, NOW(), NULL);
 INSERT INTO `t_menu` VALUES (100024, 100015, 'mapping', NULL, NULL, 'app:mapping', NULL, '1', '1', NULL, NOW(), NULL);
-INSERT INTO `t_menu` VALUES (100025, 100015, 'deploy', NULL, NULL, 'app:deploy', NULL, '1', '1', NULL, NOW(), NULL);
+INSERT INTO `t_menu` VALUES (100025, 100015, 'launch', NULL, NULL, 'app:launch', NULL, '1', '1', NULL, NOW(), NULL);
 INSERT INTO `t_menu` VALUES (100026, 100015, 'start', NULL, NULL, 'app:start', NULL, '1', '1', NULL, NOW(), NULL);
 INSERT INTO `t_menu` VALUES (100027, 100015, 'clean', NULL, NULL, 'app:clean', NULL, '1', '1', NULL, NOW(), NULL);
 INSERT INTO `t_menu` VALUES (100028, 100015, 'cancel', NULL, NULL, 'app:cancel', NULL, '1', '1', NULL, NOW(), NULL);
@@ -491,17 +493,19 @@ PRIMARY KEY (`KEY`) USING BTREE
 -- Records of t_setting
 -- ----------------------------
 BEGIN;
-INSERT INTO `t_setting` VALUES (1, 'maven.central.repository', NULL, 'Maven Central Repository', 'Maven 私服地址', 1);
-INSERT INTO `t_setting` VALUES (2, 'streamx.console.webapp.address', NULL, 'StreamX Webapp address', 'StreamX Console Web 应用程序HTTP URL', 1);
-INSERT INTO `t_setting` VALUES (3, 'alert.email.host', NULL, 'Alert Email Smtp Host', '告警邮箱Smtp Host', 1);
-INSERT INTO `t_setting` VALUES (4, 'alert.email.port', NULL, 'Alert Email Smtp Port', '告警邮箱的Smtp Port', 1);
-INSERT INTO `t_setting` VALUES (5, 'alert.email.from', NULL, 'Alert  Email From', '发送告警的邮箱', 1);
-INSERT INTO `t_setting` VALUES (6, 'alert.email.userName', NULL, 'Alert  Email User', '用来发送告警邮箱的认证用户名', 1);
-INSERT INTO `t_setting` VALUES (7, 'alert.email.password', NULL, 'Alert Email Password', '用来发送告警邮箱的认证密码', 1);
-INSERT INTO `t_setting` VALUES (8, 'alert.email.ssl', 'false', 'Alert Email Is SSL', '发送告警的邮箱是否开启SSL', 2);
-INSERT INTO `t_setting` VALUES (9, 'docker.register.address', NULL, 'Docker Register Address', 'Docker容器服务地址', 1);
-INSERT INTO `t_setting` VALUES (10, 'docker.register.user', NULL, 'Docker Register User', 'Docker容器服务认证用户名', 1);
-INSERT INTO `t_setting` VALUES (11, 'docker.register.password', NULL, 'Docker Register Password', 'Docker容器服务认证密码', 1);
+INSERT INTO `t_setting` VALUES (1, 'streamx.maven.central.repository', NULL, 'Maven Central Repository', 'Maven 私服地址', 1);
+INSERT INTO `t_setting` VALUES (2, 'streamx.maven.auth.user', NULL, 'Maven Central Repository Auth User', 'Maven 私服认证用户名', 1);
+INSERT INTO `t_setting` VALUES (3, 'streamx.maven.auth.password', NULL, 'Maven Central Repository Auth Password', 'Maven 私服认证密码', 1);
+INSERT INTO `t_setting` VALUES (4, 'streamx.console.webapp.address', NULL, 'StreamX Webapp address', 'StreamX Console Web 应用程序HTTP URL', 1);
+INSERT INTO `t_setting` VALUES (5, 'alert.email.host', NULL, 'Alert Email Smtp Host', '告警邮箱Smtp Host', 1);
+INSERT INTO `t_setting` VALUES (6, 'alert.email.port', NULL, 'Alert Email Smtp Port', '告警邮箱的Smtp Port', 1);
+INSERT INTO `t_setting` VALUES (7, 'alert.email.from', NULL, 'Alert  Email From', '发送告警的邮箱', 1);
+INSERT INTO `t_setting` VALUES (8, 'alert.email.userName', NULL, 'Alert  Email User', '用来发送告警邮箱的认证用户名', 1);
+INSERT INTO `t_setting` VALUES (9, 'alert.email.password', NULL, 'Alert Email Password', '用来发送告警邮箱的认证密码', 1);
+INSERT INTO `t_setting` VALUES (10, 'alert.email.ssl', 'false', 'Alert Email Is SSL', '发送告警的邮箱是否开启SSL', 2);
+INSERT INTO `t_setting` VALUES (11, 'docker.register.address', NULL, 'Docker Register Address', 'Docker容器服务地址', 1);
+INSERT INTO `t_setting` VALUES (12, 'docker.register.user', NULL, 'Docker Register User', 'Docker容器服务认证用户名', 1);
+INSERT INTO `t_setting` VALUES (13, 'docker.register.password', NULL, 'Docker Register Password', 'Docker容器服务认证密码', 1);
 COMMIT;
 
 -- ----------------------------

@@ -110,6 +110,8 @@ object ConfigConst {
 
   val KEY_FLINK_APP_NAME = "pipeline.name"
 
+  val KEY_YARN_APP_ID = "yarn.application.id"
+
   val KEY_YARN_APP_QUEUE = "yarn.application.queue"
 
   val KEY_FLINK_SAVEPOINT_PATH = "execution.savepoint.path"
@@ -335,6 +337,8 @@ object ConfigConst {
 
   val KEY_ES_REST_MAX_RETRY = "es.rest.max.retry.timeout"
 
+  val KEY_ES_REST_PATH_PREFIX = "es.rest.path.prefix"
+
   val KEY_ES_REST_CONTENT_TYPE = "es.rest.content.type"
 
   val KEY_ES_CONN_REQ_TIME_OUT = "es.connect.request.timeout"
@@ -346,6 +350,8 @@ object ConfigConst {
   val KEY_ES_BULK_PREFIX = "bulk.flush."
 
   val KEY_ES_CLIENT_TRANSPORT_SNIFF = "client.transport.sniff"
+
+  val KEY_ES_DISABLE_FLUSH_ONCHECKPOINT = "es.disableFlushOnCheckpoint"
 
   /**
    * flink config key

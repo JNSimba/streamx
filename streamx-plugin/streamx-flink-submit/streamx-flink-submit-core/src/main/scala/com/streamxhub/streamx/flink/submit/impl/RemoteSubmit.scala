@@ -21,13 +21,13 @@ package com.streamxhub.streamx.flink.submit.impl
 
 import com.streamxhub.streamx.common.enums.DevelopmentMode
 import com.streamxhub.streamx.common.util.Utils
-import com.streamxhub.streamx.flink.packer.pipeline.FlinkRemoteBuildResponse
+import com.streamxhub.streamx.flink.packer.pipeline.ShadedBuildResponse
 import com.streamxhub.streamx.flink.submit.`trait`.FlinkSubmitTrait
 import com.streamxhub.streamx.flink.submit.bean.{StopRequest, StopResponse, SubmitRequest, SubmitResponse}
 import com.streamxhub.streamx.flink.submit.tool.FlinkSessionSubmitHelper
 import org.apache.flink.api.common.JobID
 import org.apache.flink.client.deployment.{DefaultClusterClientServiceLoader, StandaloneClusterDescriptor, StandaloneClusterId}
-import org.apache.flink.client.program.{ClusterClient, PackagedProgram, PackagedProgramUtils}
+import org.apache.flink.client.program.{ClusterClient, PackagedProgram}
 import org.apache.flink.configuration._
 
 import java.io.File
@@ -35,7 +35,7 @@ import java.lang.{Integer => JavaInt}
 
 
 /**
- * Submit Job to Remote Session Cluster
+ * Submit Job to Remote Cluster
  */
 object RemoteSubmit extends FlinkSubmitTrait {
 
@@ -47,7 +47,7 @@ object RemoteSubmit extends FlinkSubmitTrait {
     flinkConfig
       .safeSet(PipelineOptions.NAME, submitRequest.effectiveAppName)
       .safeSet(RestOptions.ADDRESS, submitRequest.extraParameter.get(RestOptions.ADDRESS.key()).toString)
-      .safeSet(RestOptions.PORT, JavaInt.valueOf(submitRequest.extraParameter.get(RestOptions.PORT.key()).toString))
+      .safeSet[JavaInt](RestOptions.PORT, submitRequest.extraParameter.get(RestOptions.PORT.key()).toString.toInt)
     logInfo(
       s"""
          |------------------------------------------------------------------
@@ -60,11 +60,12 @@ object RemoteSubmit extends FlinkSubmitTrait {
     // 1) get userJar
     val jarFile = submitRequest.developmentMode match {
       case DevelopmentMode.FLINKSQL =>
-        checkBuildResult(submitRequest)
+
+        submitRequest.checkBuildResult()
         // 1) get build result
-        val buildResult = submitRequest.buildResult.asInstanceOf[FlinkRemoteBuildResponse]
+        val buildResult = submitRequest.buildResult.asInstanceOf[ShadedBuildResponse]
         // 2) get fat-jar
-        new File(buildResult.flinkShadedJarPath)
+        new File(buildResult.shadedJarPath)
       case _ => new File(submitRequest.flinkUserJar)
     }
 
@@ -78,7 +79,7 @@ object RemoteSubmit extends FlinkSubmitTrait {
     flinkConfig
       .safeSet(DeploymentOptions.TARGET, stopRequest.executionMode.getName)
       .safeSet(RestOptions.ADDRESS, stopRequest.extraParameter.get(RestOptions.ADDRESS.key()).toString)
-      .safeSet(RestOptions.PORT, JavaInt.valueOf(stopRequest.extraParameter.get(RestOptions.PORT.key()).toString))
+      .safeSet[JavaInt](RestOptions.PORT, stopRequest.extraParameter.get(RestOptions.PORT.key()).toString.toInt)
     logInfo(
       s"""
          |------------------------------------------------------------------
@@ -133,13 +134,10 @@ object RemoteSubmit extends FlinkSubmitTrait {
     }
   }
 
-
   /**
    * Submit flink session job with building JobGraph via Standalone ClusterClient api.
    */
-  // noinspection DuplicatedCode
   @throws[Exception] def jobGraphSubmit(submitRequest: SubmitRequest, flinkConfig: Configuration, jarFile: File): SubmitResponse = {
-    // retrieve standalone session cluster and submit flink job on session mode
     var clusterDescriptor: StandaloneClusterDescriptor = null;
     var packageProgram: PackagedProgram = null
     var client: ClusterClient[StandaloneClusterId] = null
@@ -147,16 +145,9 @@ object RemoteSubmit extends FlinkSubmitTrait {
       val standAloneDescriptor = getStandAloneClusterDescriptor(flinkConfig)
       clusterDescriptor = standAloneDescriptor._2
       // build JobGraph
-      packageProgram = super.getPackageProgram(flinkConfig, submitRequest, jarFile)
-
-      val jobGraph = PackagedProgramUtils.createJobGraph(
-        packageProgram,
-        flinkConfig,
-        getParallelism(submitRequest),
-        null,
-        false
-      )
-
+      val packageProgramJobGraph = super.getJobGraph(flinkConfig, submitRequest, jarFile)
+      packageProgram = packageProgramJobGraph._1
+      val jobGraph = packageProgramJobGraph._2
       client = clusterDescriptor.retrieve(standAloneDescriptor._1).getClusterClient
       val jobId = client.submitJob(jobGraph).get().toString
       val result = SubmitResponse(jobId, flinkConfig.toMap, jobId)
@@ -167,7 +158,10 @@ object RemoteSubmit extends FlinkSubmitTrait {
         e.printStackTrace()
         throw e
     } finally {
-      Utils.close(packageProgram, client, clusterDescriptor)
+      if (submitRequest.safePackageProgram) {
+        Utils.close(packageProgram)
+      }
+      Utils.close(client, clusterDescriptor)
     }
   }
 
@@ -176,22 +170,12 @@ object RemoteSubmit extends FlinkSubmitTrait {
    *
    * @param flinkConfig
    */
-  def getStandAloneClusterDescriptor(flinkConfig: Configuration): (StandaloneClusterId, StandaloneClusterDescriptor) = {
+  private[this] def getStandAloneClusterDescriptor(flinkConfig: Configuration): (StandaloneClusterId, StandaloneClusterDescriptor) = {
     val serviceLoader = new DefaultClusterClientServiceLoader
     val clientFactory = serviceLoader.getClusterClientFactory(flinkConfig)
     val standaloneClusterId: StandaloneClusterId = clientFactory.getClusterId(flinkConfig)
     val standaloneClusterDescriptor = clientFactory.createClusterDescriptor(flinkConfig).asInstanceOf[StandaloneClusterDescriptor]
     (standaloneClusterId, standaloneClusterDescriptor)
-  }
-
-  @throws[Exception] private[this] def checkBuildResult(submitRequest: SubmitRequest): Unit = {
-    val result = submitRequest.buildResult
-    if (result == null) {
-      throw new Exception(s"[flink-submit] current job: ${submitRequest.effectiveAppName} was not yet built, buildResult is empty")
-    }
-    if (!result.pass) {
-      throw new Exception(s"[flink-submit] current job ${submitRequest.effectiveAppName} build failed, please check")
-    }
   }
 
 }
