@@ -17,43 +17,15 @@
  * limitations under the License.
  */
 
-package com.streamxhub.streamx.console.core.entity;
+package com.streamxhub.streamx.test.flink.java.bean;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-
-/**
- * @author benjobs
- */
 @Data
-@TableName("t_flink_log")
-@Slf4j
-public class ApplicationLog {
-
-    private Long id;
-    /**
-     * appId
-     */
-    private Long appId;
-    /**
-     * applicationId
-     */
-    private String yarnAppId;
-    /**
-     * 启动状态
-     */
-    private Boolean success;
-
-    /**
-     * 操作时间
-     */
-    private Date optionTime;
-
-    /**
-     * 启动失败的异常
-     */
-    private String exception;
+public class Behavior {
+    private String user_id;
+    private Long item_id;
+    private Long category_id;
+    private String behavior;
+    private Long ts;
 }
